@@ -25,6 +25,21 @@ public void ForEachProject(string globPattern, Action<DirectoryPath, FilePath> p
     }
 }
 
+public void ForEachNugetPackage(Action<FilePath> nugetPackageAction, string globPattern = "src/**/bin/**/*.nupkg")
+{
+    var packages = GetFiles(globPattern);
+
+    if (!packages.Any())
+    {
+        Information("No packages to publish");
+    }
+
+    foreach (var packageFile in packages)
+    {
+        nugetPackageAction(packageFile);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////
 // Tasks
 //////////////////////////////////////////////////////////////////////
@@ -98,30 +113,31 @@ public void RunMiniCover(
     DotNetCoreTool("./tools/tools.csproj", "minicover", $"report --workdir ../ --threshold {coverageThreshold}");
 }
 
-Task("Pack")
-    .Does(() => ForEachProject("./src/*", (projectDir, projectFile) => {
-        var settings = new DotNetCorePackSettings
-        {
-            Configuration = Configuration,
-            OutputDirectory = OutputPath
-        };
+Task("CleanLocalPackages")
+    .Does(() =>
+{
+    DeleteFiles("./src/**/*.nupkg");
+});
 
-        var isReleaseBuild = Configuration == "Release";
-        if (isReleaseBuild)
-        {
-            Information($"Release Build");
-        }
-        else
-        {
-            var buildNumber = $"t{DateTime.UtcNow.ToString("yyMMddHHmmss")}";
+Task("PublishLocal")
+    .IsDependentOn("CleanLocalPackages")
+    .IsDependentOn("Build")
+    .Does(() =>
+{
+    ForEachNugetPackage(packageFile => {
+        Information($"Copying to local .nuget cache: {packageFile.FullPath}");
+        CopyFiles(packageFile.FullPath, $"{HOME_DIR}/.nuget/packages");
+    });
+});
 
-            settings.VersionSuffix = buildNumber;
-            Information($"Prerelease Build Number: {buildNumber}");
-        }
-
-        DotNetCorePack(projectDir.FullPath, settings);
-    })
-);
+Task("PublishPackages")
+    .Does(() =>
+{
+    ForEachNugetPackage(packageFile => {
+        Information($"Publishing: {packageFile.FullPath}");
+        DotNetCoreNuGetPush(packageFile.FullPath, NUGET_PUSH_SETTINGS);
+    });
+});
 
 Task("Push")
     .Does(() =>
@@ -142,9 +158,5 @@ Task("Push")
 
 Task("Default")
     .IsDependentOn("DotNetTestWithCodeCoverage");
-
-Task("Publish")
-    .IsDependentOn("Pack")
-    .IsDependentOn("Push");
 
 RunTarget(DefaultTarget);
