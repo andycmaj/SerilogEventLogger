@@ -113,23 +113,6 @@ public void RunMiniCover(
     DotNetCoreTool("./tools/tools.csproj", "minicover", $"report --workdir ../ --threshold {coverageThreshold}");
 }
 
-Task("CleanLocalPackages")
-    .Does(() =>
-{
-    DeleteFiles("./src/**/*.nupkg");
-});
-
-Task("PublishLocal")
-    .IsDependentOn("CleanLocalPackages")
-    .IsDependentOn("Build")
-    .Does(() =>
-{
-    ForEachNugetPackage(packageFile => {
-        Information($"Copying to local .nuget cache: {packageFile.FullPath}");
-        CopyFiles(packageFile.FullPath, $"{HOME_DIR}/.nuget/packages");
-    });
-});
-
 Task("PublishPackages")
     .Does(() =>
 {
