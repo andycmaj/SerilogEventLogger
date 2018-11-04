@@ -41,9 +41,6 @@ namespace SerilogEventLogger
         readonly string suffix;
         readonly EventSource source;
 
-        /// <summary>
-        /// Construct a <see cref="SplunkJsonFormatter"/>.
-        /// </summary>
         /// <param name="index">The Splunk index to log to</param>
         /// <param name="source">The source of the event</param>
         public JsonEventFormatter(

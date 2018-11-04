@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using ImsHealth.Logging.Sinks.Console;
+using SerilogEventLogger.Sinks.Console;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Display;

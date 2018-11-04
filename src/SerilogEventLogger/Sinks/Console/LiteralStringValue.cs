@@ -16,7 +16,7 @@ using System;
 using System.IO;
 using Serilog.Events;
 
-namespace ImsHealth.Logging.Sinks.Console
+namespace SerilogEventLogger.Sinks.Console
 {
     // A special case (non-null) string value for use in output
     // templates. Does not apply "quoted" formatting by default.

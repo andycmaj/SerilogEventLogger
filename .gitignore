@@ -47,12 +47,21 @@ build/
 !.tools/packages.config
 .yo-rc.json
 
+# See https://help.github.com/ignore-files/ for more about ignoring files.
+
 # dependencies
 /node_modules
 
 # all yarn.lock files, except the real one
 yarn.lock
 !src/HubExchangeGateway/scripts/yarn.lock
+
+# testing
+/coverage
+/src/HubExchangeGateway/scripts/coverage
+/src/Area.JourneyBuilder/scripts/coverage
+/.sonarqube
+.scannerwork/
 
 # production
 /build
@@ -69,16 +78,27 @@ yarn-debug.log*
 yarn-error.log*
 *.map
 **/.sass-cache/
-terraform.tfstate*
-.terraform/
 rebuild.ps1
 translation-export
 translation-import
+/src/CustomActivityEventTransformer/Publish
 **/aws-lambda-tools-defaults.json
+/src/CustomActivityEventTransformer/CustomActivityEventTransformer.zip
 Development.ruleset
-*.release.cshtml
+config.wyam.*
+output/
 
-#Minicover
-coverage.json
-coverage-hits.txt
-coverage-html
+# Minicover
+coverage*
+
+#Coverlet
+**/coverage.xml
+**/coverage.opencover.xml
+
+# Terraform
+*.Terraform.plan
+terraform.tfstate*
+.terraform/
+
+NuGet.config
+**/coverage.xml

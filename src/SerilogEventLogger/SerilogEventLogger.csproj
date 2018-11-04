@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <VersionPrefix>2.8.1</VersionPrefix>
+    <VersionPrefix>0.1.0</VersionPrefix>
     <TargetFrameworks>netstandard1.5</TargetFrameworks>
     <PackageId>SerilogEventLogger</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <DebugType>full</DebugType>
-    <DebugSymbols>true</DebugSymbols>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
