@@ -135,21 +135,14 @@ Task("PublishPackages")
 {
     ForEachNugetPackage(packageFile => {
         Information($"Publishing: {packageFile.FullPath}");
-        DotNetCoreNuGetPush(packageFile.FullPath, NUGET_PUSH_SETTINGS);
+        DotNetCoreNuGetPush(
+            packageFile.FullPath, new DotNetCoreNuGetPushSettings
+            {
+                Source = "https://www.nuget.org/api/v2/package",
+                ApiKey = EnvironmentVariable("NUGET_API_KEY")
+            }
+        );
     });
-});
-
-Task("Push")
-    .Does(() =>
-{
-    DotNetCoreNuGetPush(
-        OutputPath + "/*.nupkg",
-        new DotNetCoreNuGetPushSettings
-        {
-            Source = "https://www.nuget.org/api/v2/package",
-            ApiKey = EnvironmentVariable("NUGET_API_KEY")
-        }
-    );
 });
 
 //////////////////////////////////////////////////////////////////////
