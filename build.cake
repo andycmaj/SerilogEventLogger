@@ -92,7 +92,8 @@ Task("Build")
 
     DotNetCoreBuild(".", buildSettings);
 
-    MoveFiles("./src/**/*.nupkg", OutputPath + "/packages");
+    // EnsureDirectoryExists(OutputPath + "/packages");
+    MoveFiles("./src/**/*.nupkg", OutputPath);
 });
 
 Task("DotNetTestWithCodeCoverage")

@@ -18,9 +18,9 @@ jobs:
       - store_artifacts:
           path: .artifacts
       - persist_to_workspace:
-          root: .artifacts
+          root: .
           paths:
-            - packages
+            - .artifacts
 
   publish:
     <<: *defaults
