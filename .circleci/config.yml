@@ -7,4 +7,6 @@ jobs:
       - checkout
       - run:
           name: dotnet build and test with coverage
-          command: dotnet cake --target=Default --tag=$CIRCLE_TAG --verbosity=diagnostic
+          command: |
+            echo "export PATH=$PATH:/root/.dotnet/tools" >> $BASH_ENV
+            dotnet cake --target=Default --tag=$CIRCLE_TAG --verbosity=diagnostic
