@@ -1,8 +1,13 @@
 version: 2
+
+defaults: &defaults
+  working_directory: /tmp
+  docker:
+    - image: andycunn/dotnet-build:2.1-2
+
 jobs:
   build:
-    docker:
-      - image: andycunn/dotnet-build:2.1-2
+    <<: *defaults
     steps:
       - checkout
       - run:
@@ -13,11 +18,18 @@ jobs:
             dotnet cake --target=Default --tag=$CIRCLE_TAG --verbosity=diagnostic
       - store_artifacts:
           path: .artifacts
+      - persist_to_workspace:
+          root: .artifacts
+          paths:
+            - *.nupkg
+
   publish:
-    docker:
-      - image: andycunn/dotnet-build:2.1-2
+    <<: *defaults
     steps:
       - checkout
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: .artifacts
       - run:
           name: publish nuget packages
           command: |

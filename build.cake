@@ -52,8 +52,8 @@ public void ForEachNugetPackage(Action<FilePath> nugetPackageAction, string glob
 
 Setup(context =>
 {
-    Information($"Branch: {EnvironmentVariable("TRAVIS_BRANCH")}");
-    Information($"Tag: {EnvironmentVariable("TRAVIS_TAG")}");
+    Information($"Branch: {EnvironmentVariable("CIRCLE_BRANCH")}");
+    Information($"Tag: {EnvironmentVariable("CIRCLE_TAG")}");
     Information($"Build configuration: {Configuration}");
 
         CSharpCoverageThreshold = 0;
@@ -91,6 +91,8 @@ Task("Build")
     }
 
     DotNetCoreBuild(".", buildSettings);
+
+    MoveFiles("./src/**/*.nupkg", OutputPath);
 });
 
 Task("DotNetTestWithCodeCoverage")
@@ -149,7 +151,7 @@ Task("PublishPackages")
                 ApiKey = EnvironmentVariable("NUGET_API_KEY")
             }
         );
-    });
+    }, ".artifacts/*.nupkg");
 });
 
 //////////////////////////////////////////////////////////////////////
