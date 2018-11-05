@@ -42,7 +42,13 @@ workflows:
     jobs:
       - build:
           context: dotnet
+          filters:
+            tags:
+              only: /.*/
       - publish:
           context: dotnet
+          filters:
+            tags:
+              only: /.*/
           requires:
             - build
