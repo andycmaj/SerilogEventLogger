@@ -8,7 +8,7 @@ var SemVerRegex =
 var DefaultTarget = Argument("target", "Default");
 var GitTag = Argument("tag", string.Empty);
 var Configuration =
-    Argument("configuration", SemVerRegex.IsMatch(GitTag) ? "Release" : "Development");
+    Argument("configuration", SemVerRegex.IsMatch(GitTag) ? "Release" : "Debug");
 
 var OutputPath = Argument("outputPath", ".artifacts");
 
