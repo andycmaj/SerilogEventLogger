@@ -56,7 +56,8 @@ Setup(context =>
     Information($"Tag: {EnvironmentVariable("CIRCLE_TAG")}");
     Information($"Build configuration: {Configuration}");
 
-        CSharpCoverageThreshold = 0;
+    EnsureDirectoryExists(OutputPath);
+    CSharpCoverageThreshold = 0;
     // CSharpCoverageExcludePatterns.Add("**/*.Designer.cs");
 });
 
@@ -92,7 +93,6 @@ Task("Build")
 
     DotNetCoreBuild(".", buildSettings);
 
-    // EnsureDirectoryExists(OutputPath + "/packages");
     MoveFiles("./src/**/*.nupkg", OutputPath);
 });
 
