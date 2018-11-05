@@ -72,7 +72,25 @@ Task("Restore")
 Task("Build")
     .Does(() =>
 {
-    DotNetCoreBuild(".", new DotNetCoreBuildSettings { Configuration = Configuration });
+    var buildSettings = new DotNetCoreBuildSettings
+    {
+        Configuration = Configuration
+    };
+
+    var isReleaseBuild = Configuration == "Release";
+    if (isReleaseBuild)
+    {
+        Information($"Release Build");
+    }
+    else
+    {
+        var buildNumber = $"t{DateTime.UtcNow.ToString("yyMMddHHmmss")}";
+
+        buildSettings.VersionSuffix = buildNumber;
+        Information($"Prerelease Build Number: {buildNumber}");
+    }
+
+    DotNetCoreBuild(".", buildSettings);
 });
 
 Task("DotNetTestWithCodeCoverage")
