@@ -41,6 +41,8 @@ workflows:
   build_and_publish:
     jobs:
       - build
+          context: dotnet
       - publish:
+          context: dotnet
           requires:
             - build
