@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: andycunn/dotnet-build:2.1
+      - image: andycunn/dotnet-build:2.1-2
     steps:
       - checkout
       - run:
