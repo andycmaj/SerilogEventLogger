@@ -11,3 +11,14 @@ jobs:
             echo "export PATH=$PATH:/root/.dotnet/tools" >> $BASH_ENV
             source $BASH_ENV
             dotnet cake --target=Default --tag=$CIRCLE_TAG --verbosity=diagnostic
+  release:
+    docker:
+      - image: andycunn/dotnet-build:2.1-2
+    steps:
+      - checkout
+      - run:
+          name: publish nuget packages
+          command: |
+            echo "export PATH=$PATH:/root/.dotnet/tools" >> $BASH_ENV
+            source $BASH_ENV
+            dotnet cake --target=PublishPackages --tag=$CIRCLE_TAG --verbosity=diagnostic
