@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionPrefix>0.1.1</VersionPrefix>
     <TargetFrameworks>netstandard1.5</TargetFrameworks>
     <PackageId>SerilogEventLogger</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
