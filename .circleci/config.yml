@@ -1,7 +1,6 @@
 version: 2
 
 defaults: &defaults
-  working_directory: /tmp
   docker:
     - image: andycunn/dotnet-build:2.1-2
 
