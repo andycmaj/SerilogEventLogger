@@ -1,0 +1,10 @@
+version: 2
+jobs:
+  build_and_test:
+    docker:
+      - image: andycunn/dotnet-build:2.1
+    steps:
+      - checkout
+      - run:
+          name: dotnet build and test with coverage
+          command: dotnet cake --target=Default --tag=$CIRCLE_TAG --verbosity=diagnostic

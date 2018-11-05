@@ -2,8 +2,14 @@
 // ARGUMENT DEFAULTS
 //////////////////////////////////////////////////////////////////////
 
+var SemVerRegex =
+    new System.Text.RegularExpressions.Regex(@"^v[0-9]+.[0-9]+.[0-9]+");
+
 var DefaultTarget = Argument("target", "Default");
-var Configuration = Argument("configuration", "Debug");
+var GitTag = Argument("tag");
+var Configuration =
+    Argument("configuration", SemVerRegex.IsMatch(GitTag) ? "Release" : "Development");
+
 var OutputPath = Argument("outputPath", ".artifacts");
 
 // Unit Tests
