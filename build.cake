@@ -59,6 +59,12 @@ Setup(context =>
     EnsureDirectoryExists(OutputPath);
     CSharpCoverageThreshold = 0;
     // CSharpCoverageExcludePatterns.Add("**/*.Designer.cs");
+
+    var files = GetFiles(".artifacts/*");
+    foreach(var file in files)
+    {
+        Information("File: {0}", file);
+    }
 });
 
 Task("EnsureOutputPathExists")
@@ -143,6 +149,12 @@ public void RunMiniCover(
 Task("PublishPackages")
     .Does(() =>
 {
+    var files = GetFiles(".artifacts/*.nupkg");
+    foreach(var file in files)
+    {
+        Information("File: {0}", file);
+    }
+
     ForEachNugetPackage(packageFile => {
         Information($"Publishing: {packageFile.FullPath}");
         DotNetCoreNuGetPush(
