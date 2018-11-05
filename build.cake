@@ -92,7 +92,7 @@ Task("Build")
 
     DotNetCoreBuild(".", buildSettings);
 
-    MoveFiles("./src/**/*.nupkg", OutputPath);
+    MoveFiles("./src/**/*.nupkg", OutputPath + "/packages");
 });
 
 Task("DotNetTestWithCodeCoverage")
