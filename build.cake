@@ -2,8 +2,14 @@
 // ARGUMENT DEFAULTS
 //////////////////////////////////////////////////////////////////////
 
+var SemVerRegex =
+    new System.Text.RegularExpressions.Regex(@"^v[0-9]+.[0-9]+.[0-9]+");
+
 var DefaultTarget = Argument("target", "Default");
-var Configuration = Argument("configuration", "Debug");
+var GitTag = Argument("tag", string.Empty);
+var Configuration =
+    Argument("configuration", SemVerRegex.IsMatch(GitTag) ? "Release" : "Debug");
+
 var OutputPath = Argument("outputPath", ".artifacts");
 
 // Unit Tests
@@ -46,12 +52,19 @@ public void ForEachNugetPackage(Action<FilePath> nugetPackageAction, string glob
 
 Setup(context =>
 {
-    Information($"Branch: {EnvironmentVariable("TRAVIS_BRANCH")}");
-    Information($"Tag: {EnvironmentVariable("TRAVIS_TAG")}");
+    Information($"Branch: {EnvironmentVariable("CIRCLE_BRANCH")}");
+    Information($"Tag: {EnvironmentVariable("CIRCLE_TAG")}");
     Information($"Build configuration: {Configuration}");
 
-        CSharpCoverageThreshold = 0;
+    EnsureDirectoryExists(OutputPath);
+    CSharpCoverageThreshold = 0;
     // CSharpCoverageExcludePatterns.Add("**/*.Designer.cs");
+
+    var files = GetFiles(".artifacts/*");
+    foreach(var file in files)
+    {
+        Information("File: {0}", file);
+    }
 });
 
 Task("EnsureOutputPathExists")
@@ -66,7 +79,27 @@ Task("Restore")
 Task("Build")
     .Does(() =>
 {
-    DotNetCoreBuild(".", new DotNetCoreBuildSettings { Configuration = Configuration });
+    var buildSettings = new DotNetCoreBuildSettings
+    {
+        Configuration = Configuration
+    };
+
+    var isReleaseBuild = Configuration == "Release";
+    if (isReleaseBuild)
+    {
+        Information($"Release Build");
+    }
+    else
+    {
+        var buildNumber = $"t{DateTime.UtcNow.ToString("yyMMddHHmmss")}";
+
+        buildSettings.VersionSuffix = buildNumber;
+        Information($"Prerelease Build Number: {buildNumber}");
+    }
+
+    DotNetCoreBuild(".", buildSettings);
+
+    MoveFiles("./src/**/*.nupkg", OutputPath);
 });
 
 Task("DotNetTestWithCodeCoverage")
@@ -116,6 +149,12 @@ public void RunMiniCover(
 Task("PublishPackages")
     .Does(() =>
 {
+    var files = GetFiles(".artifacts/*.nupkg");
+    foreach(var file in files)
+    {
+        Information("File: {0}", file);
+    }
+
     ForEachNugetPackage(packageFile => {
         Information($"Publishing: {packageFile.FullPath}");
         DotNetCoreNuGetPush(
@@ -125,7 +164,7 @@ Task("PublishPackages")
                 ApiKey = EnvironmentVariable("NUGET_API_KEY")
             }
         );
-    });
+    }, ".artifacts/*.nupkg");
 });
 
 //////////////////////////////////////////////////////////////////////

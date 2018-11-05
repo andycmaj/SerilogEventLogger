@@ -1,0 +1,48 @@
+version: 2
+
+defaults: &defaults
+  docker:
+    - image: andycunn/dotnet-build:2.1-2
+
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: dotnet build and test with coverage
+          command: |
+            echo "export PATH=$PATH:/root/.dotnet/tools" >> $BASH_ENV
+            source $BASH_ENV
+            dotnet cake --target=Default --tag=$CIRCLE_TAG --verbosity=diagnostic
+      - store_artifacts:
+          path: .artifacts
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .artifacts
+
+  publish:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: .
+      - run:
+          name: publish nuget packages
+          command: |
+            echo "export PATH=$PATH:/root/.dotnet/tools" >> $BASH_ENV
+            source $BASH_ENV
+            dotnet cake --target=PublishPackages --tag=$CIRCLE_TAG --verbosity=diagnostic
+
+workflows:
+  version: 2
+  build_and_publish:
+    jobs:
+      - build:
+          context: dotnet
+      - publish:
+          context: dotnet
+          requires:
+            - build
