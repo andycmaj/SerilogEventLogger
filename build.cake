@@ -6,7 +6,7 @@ var SemVerRegex =
     new System.Text.RegularExpressions.Regex(@"^v[0-9]+.[0-9]+.[0-9]+");
 
 var DefaultTarget = Argument("target", "Default");
-var GitTag = Argument("tag");
+var GitTag = Argument("tag", string.Empty);
 var Configuration =
     Argument("configuration", SemVerRegex.IsMatch(GitTag) ? "Release" : "Development");
 
