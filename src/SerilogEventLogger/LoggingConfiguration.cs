@@ -11,6 +11,8 @@ namespace SerilogEventLogger
         public string ApplicationVersion { get; }
         public string ServerName { get; }
 
+        public LoggerConfiguration SerilogConfiguration { get; }
+
         public LoggingConfiguration(
             string environment,
             string applicationName = null,
@@ -22,9 +24,11 @@ namespace SerilogEventLogger
             ApplicationName = applicationName;
             ApplicationVersion = applicationVersion;
             ServerName = serverName;
+
+            SerilogConfiguration = Configure();
         }
 
-        public LoggerConfiguration Configure()
+        private LoggerConfiguration Configure()
         {
             var eventSource =
                 new EventSource {
