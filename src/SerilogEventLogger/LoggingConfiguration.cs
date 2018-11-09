@@ -10,23 +10,18 @@ namespace SerilogEventLogger
         public string ApplicationName { get; }
         public string ApplicationVersion { get; }
         public string ServerName { get; }
-        public bool ShouldLogAsynchronously { get; }
-
-        public bool ShouldLogToConsole { get; set; } = false;
 
         public LoggingConfiguration(
             string environment,
             string applicationName = null,
             string applicationVersion = null,
-            string serverName = null,
-            bool shouldLogAsynchronously = false
+            string serverName = null
         )
         {
             Environment = environment;
             ApplicationName = applicationName;
             ApplicationVersion = applicationVersion;
             ServerName = serverName;
-            ShouldLogAsynchronously = shouldLogAsynchronously;
         }
 
         public LoggerConfiguration Configure()
@@ -44,7 +39,8 @@ namespace SerilogEventLogger
             var serilogConfig =
                 new LoggerConfiguration()
                     .MinimumLevel.Debug()
-                    .Enrich.FromLogContext();
+                    .Enrich.FromLogContext()
+                    .WriteTo.Console();
 
             if (!string.IsNullOrWhiteSpace(ApplicationVersion))
             {
@@ -53,12 +49,6 @@ namespace SerilogEventLogger
             if (!string.IsNullOrWhiteSpace(Environment))
             {
                 serilogConfig.Enrich.WithProperty("Environment", Environment);
-            }
-
-            if (ShouldLogToConsole)
-            {
-                Console.WriteLine("Console logging enabled.");
-                serilogConfig.WriteTo.Console();
             }
 
             return serilogConfig;
