@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <VersionPrefix>0.2.1</VersionPrefix>
-    <TargetFrameworks>netstandard1.5</TargetFrameworks>
+    <VersionPrefix>0.3.0</VersionPrefix>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>SerilogEventLogger</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -13,5 +13,6 @@
     <PackageReference Include="Serilog" Version="2.7.1" />
     <PackageReference Include="Serilog.Sinks.Async" Version="1.3.0" />
     <PackageReference Include="SourceLink.Embed.AllSourceFiles" Version="2.8.3" />
+    <PackageReference Include="Structurizer" Version="4.0.0" />
   </ItemGroup>
 </Project>

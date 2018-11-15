@@ -7,8 +7,7 @@ namespace SerilogEventLogger.Tests
 {
     public class EventLoggerTest
     {
-        private readonly ILogger fakeParentLogger =
-            A.Fake<ILogger>();
+        private readonly ILogger fakeParentLogger = A.Fake<ILogger>();
 
         [Fact]
         public void Can_Build_LoggerName_From_Simple_Type()

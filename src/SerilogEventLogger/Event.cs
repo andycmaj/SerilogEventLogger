@@ -8,20 +8,22 @@ namespace SerilogEventLogger
         public string Name { get; }
         public EventData Data { get; }
         public Severity Severity { get; }
-        public DateTime Stamp { get; } = DateTime.UtcNow;
+        public DateTime Stamp { get; }
 
-        public Event(string name, object data, Severity severity = Severity.Information)
+        public Event(string name, object data, Severity severity = Severity.Information, DateTime? stamp = null)
         {
             Name = name;
             Data = new EventData(data);
             Severity = severity;
+            Stamp = stamp ?? DateTime.UtcNow;
         }
 
-        public Event(string name, EventData data, Severity severity = Severity.Information)
+        public Event(string name, EventData data, Severity severity = Severity.Information, DateTime? stamp = null)
         {
             Name = name;
             Data = data;
             Severity = severity;
+            Stamp = stamp ?? DateTime.UtcNow;
         }
 
         public Event With(IDictionary<string, object> additionalData)

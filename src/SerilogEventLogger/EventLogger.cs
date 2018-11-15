@@ -1,6 +1,4 @@
-using SerilogEventLogger.Serilog.Parameters;
 using Serilog;
-using Serilog.Core;
 using Serilog.Events;
 using Serilog.Parsing;
 using System;
@@ -29,8 +27,7 @@ namespace SerilogEventLogger
         internal const string SourceContext = "SourceContext";
 
         public const string EventDataTemplate = "{@EventData}";
-        private static readonly PropertyValueConverter valueConverter =
-            new PropertyValueConverter();
+
         private static readonly MessageTemplate eventDataTemplate =
             new MessageTemplateParser().Parse(EventDataTemplate);
 
@@ -126,8 +123,8 @@ namespace SerilogEventLogger
                     logEvent.Severity.ToLogEventLevel(),
                     ex,
                     eventDataTemplate,
-                    logEvent.Data.ToSerilogProperties(valueConverter)
-                        .Concat(scopeData.ToSerilogProperties(valueConverter))
+                    logEvent.Data.ToSerilogProperties()
+                        .Concat(scopeData.ToSerilogProperties())
                 ));
         }
 
