@@ -42,23 +42,5 @@ namespace SerilogEventLogger
 
             return this;
         }
-
-        public override bool Equals(object obj)
-        {
-            var other = obj as Event;
-            if (obj == null || other == null)
-            {
-                return false;
-            }
-
-            return Equals(other);
-        }
-
-        public bool Equals(Event other)
-        {
-            return Name == other.Name
-                && Data == other.Data
-                && Severity == other.Severity;
-        }
     }
 }

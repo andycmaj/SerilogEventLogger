@@ -103,7 +103,7 @@ namespace SerilogEventLogger.Sinks.Console
         {
             if (logEvent == null) throw new ArgumentNullException(nameof(logEvent));
 
-            var outputProperties = OutputProperties.GetOutputProperties(logEvent);
+            var outputProperties = logEvent.Properties;
             var outputStream = GetOutputStream(logEvent.Level);
             lock (_syncRoot)
             {
