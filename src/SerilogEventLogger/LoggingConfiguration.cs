@@ -44,7 +44,7 @@ namespace SerilogEventLogger
                 new LoggerConfiguration()
                     .MinimumLevel.Debug()
                     .Enrich.FromLogContext()
-                    .WriteTo.Console();
+                    .WriteTo.Console(outputTemplate: "{Event}");
 
             if (!string.IsNullOrWhiteSpace(ApplicationVersion))
             {
