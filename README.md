@@ -1,7 +1,5 @@
 # Event Logging
 
-> [API Docs](http://logging.apidocs.iqvia.io/api)
-
 ## Logging Events
 
 ```csharp
