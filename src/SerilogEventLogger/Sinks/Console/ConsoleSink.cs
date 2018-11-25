@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using SerilogEventLogger.Sinks.Console;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting.Display;
@@ -71,18 +70,33 @@ namespace SerilogEventLogger.Sinks.Console
         readonly object _syncRoot = new object();
         readonly MessageTemplate _outputTemplate;
         readonly LogEventLevel? _standardErrorFromLevel;
+        readonly TextWriter _outputStream;
         readonly JsonEventFormatter _jsonFormatter;
 
         public ConsoleSink(
             string outputTemplate,
             IFormatProvider formatProvider,
-            LogEventLevel? standardErrorFromLevel)
+            LogEventLevel? standardErrorFromLevel
+        )
         {
             if (outputTemplate == null) throw new ArgumentNullException(nameof(outputTemplate));
             _outputTemplate = new MessageTemplateParser().Parse(outputTemplate);
             _formatProvider = formatProvider;
             _standardErrorFromLevel = standardErrorFromLevel;
             _jsonFormatter = new JsonEventFormatter();
+        }
+
+        public ConsoleSink(
+            string outputTemplate,
+            IFormatProvider formatProvider,
+            TextWriter outputStream
+        )
+        {
+            if (outputTemplate == null) throw new ArgumentNullException(nameof(outputTemplate));
+            _outputTemplate = new MessageTemplateParser().Parse(outputTemplate);
+            _formatProvider = formatProvider;
+            _jsonFormatter = new JsonEventFormatter();
+            _outputStream = outputStream;
         }
 
         public void Emit(LogEvent logEvent)
@@ -114,6 +128,7 @@ namespace SerilogEventLogger.Sinks.Console
                                 RenderExceptionToken(propertyToken, outputProperties, outputStream);
                                 break;
                             case "EventData":
+                            case "Event":
                                 RenderEventData(logEvent, outputStream);
                                 break;
                             default:
@@ -369,6 +384,11 @@ namespace SerilogEventLogger.Sinks.Console
 
         TextWriter GetOutputStream(LogEventLevel logLevel)
          {
+            if (_outputStream != null)
+            {
+                return _outputStream;
+            }
+
             if (!_standardErrorFromLevel.HasValue)
             {
                 return SysConsole.Out;

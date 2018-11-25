@@ -1,16 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
-using Serilog.Core;
 using Serilog.Events;
+using Structurizer;
 
 namespace SerilogEventLogger
 {
     public class EventData : Dictionary<string, object>
     {
+        private static readonly FlexibleStructureBuilder structurizer
+            = new FlexibleStructureBuilder();
+
         public EventData() : base(StringComparer.OrdinalIgnoreCase)
         {
         }
@@ -32,8 +33,7 @@ namespace SerilogEventLogger
                 return;
             }
 
-            var pairs = values as IEnumerable<KeyValuePair<string, object>>;
-            if (pairs != null)
+            if (values is IEnumerable<KeyValuePair<string, object>> pairs)
             {
                 // ASPNETCORE logger states and scopes are IReadOnlyList<KeyValuePair>
                 foreach(var pair in pairs)
@@ -41,21 +41,21 @@ namespace SerilogEventLogger
                     this[pair.Key] = pair.Value;
                 }
             }
-            else if (!typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(values.GetType()))
+            else if (!typeof(IEnumerable).IsAssignableFrom(values.GetType()))
             {
                 // Flat object was passed in
-                var props = TypeDescriptor.GetProperties(values);
-                foreach (PropertyDescriptor prop in props)
+                var type = values.GetType();
+                var props = structurizer.CreateStructure(values);
+                foreach (var index in props.Indexes)
                 {
-                    var val = prop.GetValue(values);
-                    this[prop.Name]  = val;
+                    this[index.Path] = index.Value;
                 }
             }
         }
 
-        internal IEnumerable<LogEventProperty> ToSerilogProperties(ILogEventPropertyFactory propertyFactory)
+        internal IEnumerable<LogEventProperty> ToSerilogProperties()
         {
-            return this.Select(pair => propertyFactory.CreateProperty(pair.Key, pair.Value, true));
+            return this.Select(pair => new LogEventProperty(pair.Key, new ScalarValue(pair.Value)));
         }
     }
 }
