@@ -5,7 +5,7 @@
     <PackageId>SerilogEventLogger</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>CS1591</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;NU5105;</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
