@@ -59,12 +59,6 @@ Setup(context =>
     EnsureDirectoryExists(OutputPath);
     CSharpCoverageThreshold = 0;
     // CSharpCoverageExcludePatterns.Add("**/*.Designer.cs");
-
-    var files = GetFiles(".artifacts/*");
-    foreach(var file in files)
-    {
-        Information("File: {0}", file);
-    }
 });
 
 Task("EnsureOutputPathExists")
@@ -87,14 +81,11 @@ Task("Build")
     var isReleaseBuild = Configuration == "Release";
     if (isReleaseBuild)
     {
-        Information($"Release Build");
+        Information("Release Build");
     }
     else
     {
-        var buildNumber = $"t{DateTime.UtcNow.ToString("yyMMddHHmmss")}";
-
-        buildSettings.VersionSuffix = buildNumber;
-        Information($"Prerelease Build Number: {buildNumber}");
+        Information("Prerelease Build");
     }
 
     DotNetCoreBuild(".", buildSettings);
