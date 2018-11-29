@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <VersionPrefix>0.3.1</VersionPrefix>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <PackageId>SerilogEventLogger</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -11,5 +11,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Serilog" Version="2.7.1" />
     <PackageReference Include="Structurizer" Version="4.0.0" />
+    <PackageReference Include="MinVer" Version="1.0.0-beta.1" />
   </ItemGroup>
 </Project>
