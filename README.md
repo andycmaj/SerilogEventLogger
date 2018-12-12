@@ -1,5 +1,17 @@
 # Event Logging
 
+This library provides a different way to do logging in dotnet core applications.
+
+> see [this github issue](https://github.com/aspnet/Logging/issues/533#issuecomment-433589765) for more context.
+
+Templated message logs are great, but when you're piping your log events to an index like splunk, stackdriver, etc. you really don't need any message at all. When you're trying to consume application logs, the context/DATA is the most important thing. I don't care about an actual human-readable message, eg "A thing happened during {step}". In real-world scenarios where developers are looking at tons of log events, they want to be able to alert, graph, and data-mine. For these purposes, thousands of events with the same english sentence as a message have a very high noise-to-signal ratio mostly noise.
+
+So when i think of structured event logging, I think of my log events as **events** consisting of *just the facts* `EventName`, `Data` (and other metadata like `Source`, `Level`, `StackTrace` etc.).
+
+The problem is that 100% of existing dotnet logger APIs force you to log your events in the context of an interpolated string `message`.
+
+This API provides an alternative that allows you to log RAW **events**.
+
 ## Logging Events
 
 ```csharp
@@ -22,11 +34,13 @@ logger.AlertEvent("JobFailed", ex, new { command.JobType, command.JobInput });
 
 ## Scopes
 
+> Log Scopes use `AsyncLocal` for storing the scope stack, and thus effect all logged events (inside the `IDisposable` scope) on the thread where `BeginScope` was called.
+
 ```csharp
-// Start a logging Scope that will add {AppatureAccountId: 42, UserId: 99} to each Event
+// Start a logging Scope that will add {AccountId: 42, UserId: 99} to each Event
 // logged inside its scope. When the 'ContentUploaded' Event is logged, its data will be
-// {ContentLength: 2345, AppatureAccountId: 42, UserId: 99}
-using (logger.BeginScope(new { AppatureAccountId = 42, UserId = 99}))
+// {ContentLength: 2345, AccountId: 42, UserId: 99}
+using (logger.BeginScope(new { AccountId = 42, UserId = 99 }))
 {
     //...
     logger.LogEvent("ContentUploaded", new { command.ContentLength });
@@ -60,16 +74,52 @@ using (var gauge = logger.MoveGauge("ActiveWorkers"))
 }
 ```
 
-## Events in Splunk
+## Example: Event logged in GCP Stackdriver
 
-![gauge-event](/uploads/4771e01d3b3df47da5504b5d797ab2d8/gauge-event.png)
+![stackdriver example](https://github.com/andycmaj/SerilogEventLogger/raw/master/docs/stackdriver%20event.png)
+
+the `event.Data` in this example is collected from a combination of [`Scopes`](https://github.com/andycmaj/AspNetCore.ApplicationBlocks/blob/master/src/AspNetCore.ApplicationBlocks.FrontEnd/Middleware/RequestLoggingMiddleware.cs#L42) and [`Timers`](https://github.com/andycmaj/AspNetCore.ApplicationBlocks/blob/master/src/AspNetCore.ApplicationBlocks/Commands/LoggingCommandHandlerDecorator.cs#L28).
 
 ```csharp
-using (logger.BeginScope(new { service = "ActivityService" })
-using (var gauge = logger.MoveGauge("ActiveActivityWorkers"))
+// in RequestLoggingMiddleware
+var requestData = new
 {
-    var result = worker.DoWork();
-}
+    Connection = new
+    {
+        ...
+        RemoteIpAddress = httpContext.Connection.RemoteIpAddress.ToString(),
+    },
+    ...
+    RequestPath = httpContext.Request.Path.Value,
+    RequestId = httpContext?.TraceIdentifier
+};
+
+using (_logger.BeginScope(requestData))
+using (var timer = _logger.StartTimer("RequestTime"))
+{
+    await next();
+    ...
+```
+
+```cshar
+// in LoggingCommandHandlerDecorator
+var data = new
+{
+    CommandType = typeof(TCommand).FullName,
+    HandlerType = decoratee.GetType().FullName,
+    IsAsync = isAsync
+};
+
+return Logger.StartTimer("ExecuteCommand", data);
+```
+
+The entire stack of context (`Scopes`, `Timers`, etc.) gets flattened and merged into each event that gets logged inside those scopes.
+
+In Stackdriver, your event is inserted into and indexed as `jsonPayload.event`, and can be queried as such, eg. from the above event:
+
+```
+resource.labels.pod_id:"musigraph-prod-api-"
+jsonPayload.event.Data.RequestId="0HLIU59J75NTJ:00000001"
 ```
 
 ## Logging Best Practices:
@@ -83,19 +133,15 @@ the full Type name (`T`) of the injected `ILogger<T>`. for example:
 
 example:
 
-[event logger code](https://gitlab.ims.io//channels/TheChunnel/blob/master/activities/TheChunnel.Activities.Marketing/Email/DivideValidContactBatches/DivideValidContactBatchesCommand.cs#L93):
-
 ```csharp
 // BAD
-logger.WarningEvent("Chunnel GetRecipientsCommand Execute NoValidRecipients");
+logger.WarningEvent("GetRecipientsCommand Execute NoValidRecipients");
 ```
 
 ```csharp
 // GOOD
 logger.WarningEvent("NoValidRecipients");
 ```
-
-![ScreenCapture_at_Wed_Oct_18_12_43_29_PDT_2017](/uploads/2f052a96a703bcfe54dc3f3ffe0be46b/ScreenCapture_at_Wed_Oct_18_12_43_29_PDT_2017.png)
 
 ## event data
 
@@ -119,78 +165,29 @@ logger.ErrorEvent("ClientError", new { ResultStatus = result.Status, Message = r
 
 ## Configuring EventLogger
 
-The `EventLogger` can be configured to write events to Kinesis and/or directly to a Splunk HTTPCollector endpoint.
-
-* To write directly to a Splunk instance (used for logging locally on a dev box), you will need the local Splunk instance's HTTPCollector endpoint and a Token.
-
-* To write to a Kinesis Stream (the preferred way of writing events in production environments), you'll need AWS credentials for the and the name of the Kinesis Stream.
+See [my `ApplicationBlocks.Logging` DI module](https://github.com/andycmaj/AspNetCore.ApplicationBlocks/blob/master/src/AspNetCore.ApplicationBlocks/Logging/LoggingModule.cs#L30) for an example of how to configure and register your `IEventLogger<>` instances.
 
 ### DotNetCore + Ninject Example
 
 ```csharp
-// LoggingConfiguration contains application-scoped event context, such as `Environment`, `Version`, etc.
-var loggingConfiguration =
-    new LoggingConfiguration(
-        config.Environment,
-        config.ServiceName,
-        config.Version,
-        config.ServiceInstanceName
-    ) { ShouldLogToConsole = false };
-Bind<LoggingConfiguration>().ToConstant(loggingConfiguration);
+            container.Register(typeof(IEventLogger<>), typeof(EventLogger<>), defaultLifestyle);
 
-// KinesisConfiguration contains values needed for writing to a Kinesis stream.
-var kinesisConfig = new KinesisConfiguration();
-loggingConfigurationSection.GetSection("Kinesis").Bind(kinesisConfig);
+            container.RegisterSingleton(() =>
+            {
+                var serilogConfig = 
+                    new LoggingConfiguration(
+                        // From your app config or wherever
+                        config.Environment,
+                        config.Application,
+                        config.Version,
+                        config.Hostname
+                    );
 
-// SplunkConfiguration contains values needed for writing events directly to Splunk.
-// This is the preferred way of writing to local dev-box Splunk instances.
-var splunkConfig = new SplunkConfiguration();
-loggingConfigurationSection.GetSection("Splunk").Bind(splunkConfig);
+                Log.Logger = serilogConfig.CreateLogger();
 
-// ConfigureSinks gets you a Serilog logger configuration from which you can create a Serilog Logger, the underlying logger used by EventLoggers.
-var serilogConfig = loggingConfiguration.ConfigureSinks(kinesisConfig, splunkConfig);
-Log.Logger = serilogConfig.CreateLogger();
+                // EventLogger<> instances have a ctor dependency on serilog's ILogger as their underlying logger sink.
+                return Log.Logger;
+            });
 
-// Configuring IEventLogger<> to be injected
-Bind<Serilog.ILogger>().ToConstant(Log.Logger);
-Bind(typeof(IEventLogger<>)).To(typeof(EventLogger<>));
 ```
 
-### Monolith Example
-
-```csharp
-private static readonly Lazy<KinesisConfiguration> kinesisConfig =
-    new Lazy<KinesisConfiguration>(() =>
-        new KinesisConfiguration(
-            GetString("Logging.Kinesis.AwsAccessKeyId"),
-            GetString("Logging.Kinesis.AwsSecretAccessKey"),
-            GetString("Logging.Kinesis.AwsRegion"),
-            GetString("Logging.Kinesis.StreamName")
-        )
-    );
-
-private static readonly Lazy<SplunkConfiguration> splunkConfig =
-    new Lazy<SplunkConfiguration>(() =>
-        new SplunkConfiguration(
-            GetString("Logging.Splunk.EventCollectorUrl"),
-            GetString("Logging.Splunk.Token")
-        )
-    );
-
-private static readonly Lazy<LoggingConfiguration> loggingConfig =
-    new Lazy<LoggingConfiguration>(() => new LoggingConfiguration(
-        GetString("Environment", "not-set"),
-        AppDomain.CurrentDomain.FriendlyName,
-        "unknown",
-        Environment.MachineName
-    )
-);
-
-public LoggerConfiguration LoggerConfiguration {
-    get { return loggingConfig.Value.ConfigureSinks(kinesisConfig.Value, splunkConfig.Value); }
-}
-
-public bool IsSplunkLoggingEnabled {
-    get { return kinesisConfig.Value.IsEnabled || splunkConfig.Value.IsEnabled; }
-}
-```
